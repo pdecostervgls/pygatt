@@ -34,6 +34,7 @@ class BLEDevice(object):
         self._subscribed_handlers = {}
         self._subscribed_uuids = {}
         self._lock = threading.Lock()
+        self._cb_connection_disconnect = {}
 
     def bond(self, permanent=False):
         """

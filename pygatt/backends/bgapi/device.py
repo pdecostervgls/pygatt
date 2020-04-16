@@ -212,3 +212,11 @@ class BGAPIBLEDevice(BLEDevice):
         self._characteristics = self._backend.discover_characteristics(
             self._handle)
         return self._characteristics
+
+    def onConnectionDisconnect(self, args):
+        if (self._cb_connection_disconnect != None):
+            self._cb_connection_disconnect()
+
+    def register_callback(self, eventType, callback):
+        if eventType == 'connection_disconnect':
+            self._cb_connection_disconnect = callback

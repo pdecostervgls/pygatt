@@ -651,6 +651,9 @@ class BGAPIBackend(BLEBackend):
                 except bglib.UnknownMessageType:
                     log.warn("Ignoring message decode failure", exc_info=True)
                     continue
+                if packet_type == EventPacketType.connection_disconnected:
+                    device = self._connections[args['connection_handle']]
+                    device.onConnectionDisconnect(args)
                 if packet_type == EventPacketType.attclient_attribute_value:
                     device = self._connections[args['connection_handle']]
                     device.receive_notification(args['atthandle'],
