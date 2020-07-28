@@ -6,6 +6,10 @@ from collections import defaultdict
 from binascii import hexlify
 from uuid import UUID
 
+""" For cache functionality """
+import os
+import pickle
+
 from . import exceptions
 
 try:
@@ -265,7 +269,11 @@ class BLEDevice(object):
             char_uuid = UUID(char_uuid)
         log.debug("Looking up handle for characteristic %s", char_uuid)
         if char_uuid not in self._characteristics:
-            self._characteristics = self.discover_characteristics()
+            if self.cache_available():
+                self._characteristics = self.read_cached_characteristics()
+            else:
+                self._characteristics = self.discover_characteristics()
+                self.save_cached_characteristics(self._characteristics)
 
         characteristic = self._characteristics.get(char_uuid)
         if characteristic is None:
@@ -323,3 +331,29 @@ class BLEDevice(object):
                     wait_for_response=True
                 )
                 log.info("Resubscribed to uuid=%s", uuid)
+
+    def cache_available(self):
+        print("Looking for cache file on %s" % self._address )
+        cachePath = ".pygatt-cache"
+        cacheFileName = "/" + self._address.replace(':','') + ".pkl"
+        path = cachePath + cacheFileName
+        return os.path.isfile(path)
+
+    def save_cached_characteristics(self, chars):
+        cachePath = ".pygatt-cache"
+        cacheFileName = "/" + self._address.replace(':','') + ".pkl"
+        path = cachePath + cacheFileName
+
+        f = open(path,"wb")
+        pickle.dump(chars,f)
+        f.close()
+
+    def read_cached_characteristics(self):
+        print("Reading cached chars for %s" % self._address )
+        cachePath = ".pygatt-cache"
+        cacheFileName = "/" + self._address.replace(':','') + ".pkl"
+        path = cachePath + cacheFileName
+
+        f = open(path,"rb")
+        chars = pickle.load(f)
+        return chars
